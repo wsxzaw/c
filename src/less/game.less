@@ -1,0 +1,121 @@
+
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer !important; }
+
+.lowercase {
+  button {
+    text-transform: lowercase;
+  }
+  text-transform: lowercase;
+}
+
+.formatted {
+  font-family: monospace;
+  white-space: pre;
+}
+
+.margin-top-15 {
+  margin-top: 15px;
+}
+
+.better-aligned-code {
+  margin-top: 24px;
+}
+
+.navbar-text .progress {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.navbar-brand > img {
+  display: inline;
+  margin-right: 2px;
+}
+
+.no-border-radius {
+  .btn, pre {
+    border-radius: 0!important;
+  }
+}
+
+.vertical-center {
+  td, th {
+    vertical-align: middle!important;
+  }
+}
+
+.plus::before {
+  content: '+';
+}
+
+.minus::before {
+  content: '-';
+}
+
+.ng-table-pager {
+  display: none;
+}
+
+.text-default {
+  color: #777;
+}
+
+.no-color {
+  a {
+    color: #777;
+  }
+}
+
+button:disabled {
+  color: graytext;
+}
+
+.display-table {
+  .col-md-3 div {
+    text-align: right;
+
+    &:not(.no-bold) {
+      font-weight: bold;
+    }
+  }
+}
+
+.has-tooltip {
+  border-bottom: 1px dashed #777;
+}
+
+.ui-pnotify.stack-bar-bottom {
+  margin-left: 15%;
+  right: auto !important;
+  bottom: 0;
+  left: auto !important;
+  top: auto !important;
+}
+
+svg {
+  .node rect {
+    fill-opacity: .9;
+    shape-rendering: crispEdges;
+  }
+
+  .node text {
+    pointer-events: none;
+    text-shadow: 0 1px 0 #fff;
+  }
+
+  .link {
+    fill: none;
+  }
+}
+
+.no-padding {
+  padding: 0;
+}
+
+.overflow-contents {
+  max-height: 500px;
+  overflow-y: scroll;
+}
+
+.margin-15 {
+  margin: 15px;
+}

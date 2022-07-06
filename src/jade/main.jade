@@ -1,0 +1,225 @@
+script(type="text/ng-template", id="main")
+
+    div(ng-if="!hasUpgrade('Basic Layout')")
+        button(ng-click="gainUnits()") Gain {{currencyName}}s
+        span(ng-if="hasUpgrade('Scoreboard')") {{currencyName}}s: {{_units}}
+        div(ng-if="hasUpgrade('Visual Countdown')") {{_timer}} milliseconds
+        div(ng-repeat="item in _visibleUpgrades")
+            span {{item.name}} (Level {{item.level}})
+            button(ng-click="buyUpgrade(item.name, item.buyLevels)", ng-disabled="_units < item.cost") Buy for {{item.cost}} {{currencyName}}s
+
+        div(ng-class="{formatted: hasUpgrade('Preformatting')}") {{_function}}
+
+    nav.navbar.navbar-default(ng-if="hasUpgrade('Better Layout', 1)")
+        div.container
+            div.navbar-header
+                a.navbar-brand(href, ng-if="!hasUpgrade('Page Title')")
+                    img(alt="c",src="favicon.ico", ng-if="hasUpgrade('Favicon')")
+                    span(ng-if="!hasUpgrade('Favicon')") c
+                a.navbar-brand(href, ng-if="hasUpgrade('Page Title')")
+                    img(alt="c",src="favicon.ico", ng-if="hasUpgrade('Favicon')")
+                    span(ng-if="!hasUpgrade('Favicon')") c(ode)
+                    span(ng-if="hasUpgrade('Favicon')") (ode)
+                span.visible-xs(ng-include="'styled-score'")
+
+            div.navbar-inner
+                ul.nav.navbar-nav.navbar-left
+                    li.hidden-xs(ng-include="'styled-score'")
+
+                ul.nav.navbar-nav.navbar-right
+                    li
+                        p.navbar-text(ng-if="hasUpgrade('Visual Countdown') && !hasUpgrade('Progress Bar')")
+                            ng-include(src="'formatting-timer'")
+                        div.col-xs-12.navbar-text(ng-if="hasUpgrade('Progress Bar')")
+                            progressbar.progress-striped.active(value="100 - _timer/_timerMax*100", type="default") {{100 - (_timer/_timerMax*100).toFixed(0)}}%
+                    li
+                        button.navbar-btn(
+                            type="button",
+                            ng-click="save()",
+                            ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-info': hasUpgrade('Basic Color')}",
+                            ng-if="hasUpgrade('Save') && !hasUpgrade('Save', 3) && !hasUpgrade('Menu')"
+                            )
+                            span.fa.fa-floppy-o &nbsp;
+                            | Save
+                    li.text-center(ng-include, src="'dropdown'")
+
+
+    div.container(ng-if="hasUpgrade('Basic Layout')")
+        div.row
+            div(ng-class="{'col-xs-6': !hasUpgrade('Better Layout'), 'col-md-6': hasUpgrade('Better Layout')}")
+
+                div(ng-if="!hasUpgrade('Better Layout', 1)")
+                    h2 Acquire
+
+                    div.pull-left
+                        ng-include(src="'formatting-units'", ng-if="hasUpgrade('Scoreboard')")
+                        button(ng-click="gainUnits()", ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-primary': hasUpgrade('Basic Color')}")
+                            span.fa.fa-plus &nbsp;
+                            ng-include(src="'gain-unit-text'")
+                        ng-include(src="'early-style-save-button'")
+                        ng-include(src="'dropdown'")
+
+                    div.pull-right(ng-if="hasUpgrade('Visual Countdown')")
+                        ng-include(src="'formatting-timer'")
+
+                    div.clearfix
+
+                h2(ng-if="hasUpgrade('Basic Layout', 1)") Upgrades
+
+                h4(ng-if="_visibleUpgrades.length === 0")
+                    | No Available Upgrades
+                    span(ng-if="upgrades.length >= maxUpgrades") &nbsp;(Because you bought them all, you sly dog!)
+
+                table(
+                    ng-if="_visibleUpgrades.length > 0 && !hasUpgrade('Best Table')",
+                    ng-class="{'col-xs-12 margin-top-15': hasUpgrade('Basic Layout', 1), 'table table-bordered': hasUpgrade('Better Layout'), 'table-striped': hasUpgrade('Basic Style')}"
+                    )
+                    tr
+                        th(ng-class="{'text-right': hasUpgrade('Better Layout')}") Name
+                        th Level
+                        th Buy
+                    tr(
+                        ng-repeat="item in _visibleUpgrades",
+                        ng-class="{'danger': hasUpgrade('Basic Style', 1) && _units < item.cost, 'vertical-center': hasUpgrade('Basic Style', 1)}"
+                        )
+                        td(ng-class="{'text-right': hasUpgrade('Better Layout')}",ng-include,src="'table-item-name'")
+                        td {{item.level}}
+                        td
+                            button(
+                                ng-click="buyUpgrade(item.name, item.buyLevels)",
+                                ng-disabled="_units < item.cost",
+                                ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-default': hasUpgrade('Basic Color')}"
+                                )
+                                span.fa.fa-shopping-cart &nbsp;
+                                span(ng-if="!hasUpgrade('Number Formatting')") Buy for {{item.cost}} {{currencyName}}s
+                                span(ng-if="hasUpgrade('Number Formatting')") Buy for {{item.cost | number:0}} {{currencyName}}s
+
+                table.table.table-striped(ng-table="tableParams", show-filter="true", ng-show="_visibleUpgrades.length > 0 && hasUpgrade('Best Table')")
+                    tbody(ng-repeat="group in $groups")
+                        tr.ng-table-group
+                            td(colspan="{{$columns.length}}")
+                                a(href, ng-click="groupVisibleHash[group.value]= !groupVisibleHash[group.value]")
+                                    span.fa(
+                                        ng-if="hasUpgrade('Iconography')",
+                                        ng-class="{'fa-toggle-right': groupVisibleHash[group.value], 'fa-toggle-down': !groupVisibleHash[group.value]}"
+                                        ) &nbsp;
+                                    strong {{group.value}}
+                        tr(ng-hide="groupVisibleHash[group.value]", ng-repeat="item in group.data")
+                            td(sortable="'name'", data-title="'Name'", filter="{name: 'text'}",ng-include,src="'table-item-name'")
+                            td(sortable="'level'", data-title="'Level'", filter="{level: 'text'}") {{item.level}}
+                            td(sortable="'cost'", data-title="'Cost'", filter="{cost: 'text'}")
+                                button(
+                                    ng-click="buyUpgrade(item.name, item.buyLevels)",
+                                    ng-disabled="_units < item.cost", ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-default': hasUpgrade('Basic Color')}"
+                                    )
+                                    span.fa.fa-shopping-cart &nbsp;
+                                    span(ng-if="!hasUpgrade('Number Formatting')") Buy for {{item.cost}} {{currencyName}}s
+                                    span(ng-if="hasUpgrade('Number Formatting')") Buy for {{item.cost | number:0}} {{currencyName}}s
+
+            div(ng-class="{'col-xs-6': !hasUpgrade('Better Layout'), 'col-md-6': hasUpgrade('Better Layout')}")
+
+                h2 Output
+
+                ng-include(src="'output-code'", ng-if="!hasUpgrade('Tabbed Output')")
+                tabset(ng-if="hasUpgrade('Tabbed Output')")
+                    tab(heading="Code", active="tabActive[0]")
+                        ng-include(src="'output-code'")
+                    tab(heading="Production Over Time", active="tabActive[1]", ng-if="hasUpgrade('Production Over Time')")
+                        highchart(config="chartData.overTime", ng-if="tabActive[1]")
+                    tab(heading="Production Breakdown", active="tabActive[2]", ng-if="hasUpgrade('Production Breakdown')")
+                        highchart(config="chartData.production", ng-if="tabActive[2]")
+                    tab(heading="Upgrade Tree", active="tabActive[3]", ng-if="hasUpgrade('Upgrade Tree')")
+                        sankey(ng-if="tabActive[3]")
+
+script(type="text/ng-template", id="formatting-units")
+    span(ng-if="!hasUpgrade('Number Formatting')") {{_units}} {{currencyName}}s
+    span(ng-if="hasUpgrade('Number Formatting')") {{_units | number:0}} {{currencyName}}s
+
+script(type="text/ng-template", id="formatting-timer")
+    span(ng-if="!hasUpgrade('Number Formatting')") {{_timer}} milliseconds
+    span(ng-if="hasUpgrade('Number Formatting')") {{_timer | number:0}} milliseconds
+
+script(type="text/ng-template", id="gain-unit-text")
+    span(ng-if="!hasUpgrade('Scoreboard')") Gain {{currencyName}}s
+    span(ng-if="hasUpgrade('Scoreboard')") Get More
+
+script(type="text/ng-template", id="styled-score")
+    button.navbar-btn(
+        type="button",
+        ng-click="gainUnits()",
+        ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-primary': hasUpgrade('Basic Color')}"
+        )
+        span.fa.fa-plus &nbsp;
+        ng-include(src="'gain-unit-text'")
+    span.navbar-text.navbar-unit(ng-if="hasUpgrade('Scoreboard')")
+        ng-include(src="'formatting-units'")
+
+script(type="text/ng-template", id="output-code")
+    div(ng-if="!hasUpgrade('Syntax Highlighting')",ng-class="{'better-aligned-code formatted': hasUpgrade('Preformatting')}") {{_function}}
+    div.better-aligned-code(ng-if="hasUpgrade('Syntax Highlighting')",hljs,source="_function",language="javascript")
+
+script(type="text/ng-template", id="table-item-name")
+    span(tooltip="{{hasUpgrade('Tooltips') ? item.description : ''}}", tooltip-append-to-body="true", ng-class="{'has-tooltip': hasUpgrade('Tooltips')}") {{item.name}}
+
+script(type="text/ng-template", id="early-style-save-button")
+    button(
+        type="button",
+        ng-click="save()",
+        ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-info': hasUpgrade('Basic Color')}",
+        ng-if="hasUpgrade('Save') && !hasUpgrade('Save', 3) && !hasUpgrade('Better Layout', 1) && !hasUpgrade('Menu')"
+        )
+        span.fa.fa-floppy-o &nbsp;
+        | Save
+
+script(type="text/ng-template", id="dropdown")
+    span.dropdown(dropdown, ng-if="hasUpgrade('Menu')", ng-class="{'navbar-text': hasUpgrade('Better Layout', 1) && hasUpgrade('Iconography')}")
+        button.dropdown-toggle(
+            href,
+            dropdown-toggle,
+            ng-class="{'btn': hasUpgrade('Basic Style'), 'btn-info': hasUpgrade('Basic Color'), 'navbar-btn': hasUpgrade('Better Layout', 1)}",
+            ng-if="!hasUpgrade('Iconography')"
+            ) Menu
+        a.dropdown-toggle.text-default(
+            href,
+            dropdown-toggle,
+            ng-if="hasUpgrade('Iconography')",
+            ng-mouseenter="hover = true",
+            ng-mouseleave="hover = false"
+            )
+            span.fa.fa-gear(ng-class="{'fa-spin': hover && hasUpgrade('Basic Animation')}")
+            span &nbsp;
+            span.visible-xs-inline Menu
+        ul.dropdown-menu
+            li(ng-if="hasUpgrade('Help Menu')")
+                a(href, ng-click="openModal('help')")
+                    span.fa.fa-question-circle &nbsp;
+                    | Help
+
+            li(ng-if="hasUpgrade('Options Menu')")
+                a(href, ng-click="openModal('options')")
+                    span.fa.fa-book &nbsp;
+                    | Options
+
+            li(ng-if="hasUpgrade('Achievements Menu')")
+                a(href, ng-click="openModal('achievements')")
+                    span.fa.fa-trophy &nbsp;
+                    | Achievements
+                
+            li(ng-if="hasUpgrade('Upgrades Menu')")
+                a(href, ng-click="openModal('upgrades')")
+                    span.fa.fa-key &nbsp;
+                    | Upgrades
+
+            li(ng-if="hasUpgrade('Save') && !hasUpgrade('Save', 3)")
+                a(href, ng-click="save()")
+                    span.fa.fa-floppy-o &nbsp;
+                    | Save
+
+            li(ng-if="hasUpgrade('Save', 2)")
+                a(href, ng-click="openModal('debug')")
+                    span.fa.fa-bug &nbsp;
+                    | Debug Info
+            li
+                a(href, ng-click="openModal('credits')")
+                    span.fa.fa-birthday-cake &nbsp;
+                    | Credits
